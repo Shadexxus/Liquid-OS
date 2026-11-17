@@ -1,0 +1,118 @@
+
+name: Liquid Universal OS ISO Builder
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Debian 13 Live ISO
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+
+    steps:
+      - name: Download source
+        uses: actions/checkout@v4
+
+      - name: Fix script permissions
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          chmod +x scripts/*.sh
+
+          echo "Script permissions fixed"
+
+          ls -l scripts/
+
+      - name: Validate source code
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          bash scripts/check-source.sh
+          bash scripts/verify-project.sh
+
+          echo "Source validation passed"
+
+      - name: Build Debian 13 Live ISO
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p dist
+
+          sudo docker run \
+            --rm \
+            --privileged \
+            --mount type=bind,src="$GITHUB_WORKSPACE",dst=/project \
+            --workdir /project \
+            debian:trixie \
+            bash -euc '
+              export DEBIAN_FRONTEND=noninteractive
+
+              apt-get update
+
+              apt-get install -y \
+                live-build \
+                debootstrap \
+                squashfs-tools \
+                xorriso \
+                isolinux \
+                syslinux-common \
+                syslinux-utils \
+                dosfstools \
+                mtools \
+                ca-certificates \
+                python3 \
+                file \
+                curl \
+                wget
+
+              chmod +x scripts/*.sh
+
+              bash scripts/check-source.sh
+
+              bash scripts/verify-project.sh
+
+              bash scripts/build-iso.sh
+
+              bash scripts/check-iso.sh \
+                dist/Liquid-Universal-OS-Alpha-0.1-amd64.iso
+            '
+
+      - name: Verify generated ISO
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ISO="dist/Liquid-Universal-OS-Alpha-0.1-amd64.iso"
+
+          if [ ! -s "$ISO" ]; then
+            echo "ERROR: ISO missing"
+            exit 1
+          fi
+
+          cd dist
+
+          sha256sum -c SHA256SUMS
+
+          ls -lh
+
+          echo "ISO verification passed"
+
+      - name: Upload ISO and build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Liquid-Universal-OS-Alpha-0.1
+          path: |
+            dist/*.iso
+            dist/SHA256SUMS
+            dist/build.log
+          if-no-files-found: warn
+          retention-days: 7
+          compression-level: 0
