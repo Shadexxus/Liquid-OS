@@ -1,0 +1,9 @@
+# Basic audio, diagnostics and package support
+pipewire-audio
+wireplumber
+pavucontrol
+alsa-utils
+flatpak
+curl
+htop
+mesa-utils

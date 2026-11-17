@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Liquid Welcome
+Name[tr]=Liquid Hoş Geldiniz
+Exec=/usr/local/bin/liquid-welcome
+Icon=dialog-information
+Type=Application
+Categories=Utility;
+Terminal=false

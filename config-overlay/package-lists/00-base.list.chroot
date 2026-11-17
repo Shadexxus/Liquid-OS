@@ -1,0 +1,19 @@
+# Debian Live 13 core, networking and desktop authorization
+linux-image-amd64
+live-boot
+live-config
+systemd-sysv
+sudo
+locales
+ca-certificates
+network-manager
+network-manager-gnome
+wpasupplicant
+wireless-regdb
+firmware-linux-free
+xserver-xorg
+xserver-xorg-video-all
+dbus-x11
+dbus-user-session
+polkitd
+lxpolkit

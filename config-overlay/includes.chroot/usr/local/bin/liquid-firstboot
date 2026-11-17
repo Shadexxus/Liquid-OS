@@ -1,0 +1,5 @@
+#!/bin/sh
+# Non-destructive per-user setup. Never touches partition tables or disks.
+mkdir -p "$HOME/.config/liquid"
+mode="$(cat "$HOME/.config/liquid/selected-theme" 2>/dev/null || echo dark)"
+"/usr/local/bin/liquid-apply-theme" "$mode" >/dev/null 2>&1

@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+"""Liquid Control Center Alpha: lightweight, local XFCE settings frontend."""
+import os
+import subprocess
+import tkinter as tk
+from tkinter import ttk
+from pathlib import Path
+
+ROOT = Path('/usr/share/backgrounds/liquid')
+
+def run_command(command):
+    try:
+        subprocess.Popen(command, start_new_session=True)
+    except FileNotFoundError:
+        notice.set('Bu ayar aracı yüklenmemiş: ' + command[0])
+
+def apply_theme(name):
+    run_command(['/usr/local/bin/liquid-apply-theme', name])
+    notice.set('Tema uygulandı: ' + ('Liquid White' if name == 'light' else 'Liquid Dark'))
+
+def launch(tool):
+    run_command([tool])
+
+window = tk.Tk()
+window.title('Liquid | Kontrol Merkezi — Alpha 0.1')
+window.geometry('830x560')
+window.minsize(640, 450)
+window.configure(bg='#111827')
+try:
+    window.iconphoto(False, tk.PhotoImage(file='/usr/share/icons/hicolor/128x128/apps/liquid.png'))
+except tk.TclError:
+    pass
+
+nav = tk.Frame(window, bg='#131b31', width=210)
+nav.pack(side='left', fill='y')
+nav.pack_propagate(False)
+tk.Label(nav, text='◢  LIQUID', fg='#a8baff', bg='#131b31', font=('DejaVu Sans',18,'bold')).pack(anchor='w', padx=20,pady=(28,4))
+tk.Label(nav, text='UNIVERSAL OS · ALPHA 0.1', fg='#8b9bb8', bg='#131b31', font=('DejaVu Sans',9)).pack(anchor='w', padx=20,pady=(0,30))
+main=tk.Frame(window,bg='#111827')
+main.pack(side='left',fill='both',expand=True)
+tk.Label(main,text='Kontrol Merkezi',fg='white',bg='#111827',font=('DejaVu Sans',21,'bold')).pack(anchor='w',padx=30,pady=(35,6))
+tk.Label(main,text='Temalar, donanım ve sistem ayarları',fg='#a6b1ca',bg='#111827',font=('DejaVu Sans',11)).pack(anchor='w',padx=30)
+content=tk.Frame(main,bg='#111827')
+content.pack(fill='both',expand=True,padx=30,pady=22)
+notice=tk.StringVar(value='Liquid Alpha 0.1 · Debian tabanlı XFCE masaüstü')
+tk.Label(main,textvariable=notice,fg='#b9c8e9',bg='#111827',font=('DejaVu Sans',9)).pack(anchor='w',padx=30,pady=(0,20))
+
+def button(parent, label, callback, bg='#24345c'):
+    return tk.Button(parent,text=label,command=callback,bg=bg,fg='white',activebackground='#4a63ac',activeforeground='white',relief='flat',borderwidth=0,anchor='w',padx=15,pady=12,font=('DejaVu Sans',11),cursor='hand2')
+
+def clear():
+    for child in content.winfo_children(): child.destroy()
+
+def heading(title,desc):
+    tk.Label(content,text=title,fg='white',bg='#111827',font=('DejaVu Sans',15,'bold')).pack(anchor='w',pady=(0,8))
+    tk.Label(content,text=desc,fg='#9cabc8',bg='#111827',wraplength=460,justify='left').pack(anchor='w',pady=(0,19))
+
+def themes():
+    clear();heading('Liquid Görünüm','Gerçek XFCE duvar kâğıdı ve GTK temasını değiştirir. Liquid Glass animasyon motoru henüz geliştirilmemiştir.')
+    button(content,'☾   Liquid Dark',lambda:apply_theme('dark'), '#30305e').pack(fill='x',pady=6)
+    button(content,'☀   Liquid White',lambda:apply_theme('light'), '#205895').pack(fill='x',pady=6)
+    button(content,'⚙   XFCE Görünüm Ayarları',lambda:launch('xfce4-appearance-settings')).pack(fill='x',pady=6)
+
+def system():
+    clear(); heading('Sistem Araçları','Mevcut Debian / XFCE ayarlarını açar. Yönetici yetkisi gerektiren işlemleri otomatik çalıştırmaz.')
+    for name,cmd in [('Ekran Ayarları','xfce4-display-settings'),('Ses Ayarları','pavucontrol'),('Ağ Bağlantıları','nm-connection-editor'),('Güç Yönetimi','xfce4-power-manager-settings'),('Görev Yöneticisi','xfce4-taskmanager')]:
+        button(content,'›   '+name,lambda c=cmd:launch(c)).pack(fill='x',pady=3)
+
+def info():
+    clear();heading('Sistem Bilgisi','Liquid Universal OS · İlk çalışan masaüstü prototipi')
+    uname=os.uname()
+    for line in ['Çekirdek: '+uname.release,'Mimari: '+uname.machine,'Masaüstü: XFCE / X11','Dağıtım tabanı: Debian 13 (Trixie)','Durum: Alpha 0.1 — Live test']:
+        tk.Label(content,text=line,fg='#d9e5ff',bg='#111827',font=('DejaVu Sans',11)).pack(anchor='w',pady=6)
+
+for label,handler in [('Görünüm',themes),('Sistem Araçları',system),('Hakkında',info)]:
+    button(nav,'  '+label,handler,'#1e2a48').pack(fill='x',padx=12,pady=5)
+themes()
+window.mainloop()

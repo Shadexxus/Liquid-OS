@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Liquid OS
+Exec=/usr/local/bin/liquid-welcome
+Icon=dialog-information
+Type=Application
+Terminal=false

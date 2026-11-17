@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Liquid White
+Name[tr]=Liquid Beyaz Tema
+Comment=Activate light wallpaper and XFCE theme
+Exec=/usr/local/bin/liquid-apply-theme light
+Icon=preferences-desktop-theme
+Type=Application
+Categories=Settings;DesktopSettings;
+Terminal=false

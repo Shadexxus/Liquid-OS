@@ -1,0 +1,1 @@
+STATUS: CLEAN SOURCE PACKAGE ONLY. NO BUILT ISO. No successful live-build or QEMU boot verified in this environment.

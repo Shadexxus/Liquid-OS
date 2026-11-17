@@ -1,0 +1,3 @@
+#!/bin/sh
+# Alpha 0.1: open real local control center, not an inert mockup.
+exec /usr/local/bin/liquid-control-center

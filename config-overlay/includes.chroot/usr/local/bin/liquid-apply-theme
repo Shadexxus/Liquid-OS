@@ -1,0 +1,27 @@
+#!/bin/sh
+# Changes XFCE wallpaper + GTK theme for the current session.
+# Works without custom Liquid Shell components; Alpha 0.1 only.
+mode="${1:-dark}"
+case "$mode" in
+  light)
+    wallpaper='/usr/share/backgrounds/liquid/liquid-white.png'
+    gtk='Adwaita'
+    ;;
+  dark)
+    wallpaper='/usr/share/backgrounds/liquid/liquid-dark.png'
+    gtk='Adwaita-dark'
+    ;;
+  *) echo 'Kullanım: liquid-apply-theme light|dark' >&2; exit 2 ;;
+esac
+mkdir -p "$HOME/.config/liquid"
+printf '%s\n' "$mode" > "$HOME/.config/liquid/selected-theme"
+# Allow xfdesktop to populate monitor-specific wallpaper keys.
+xfdesktop --reload >/dev/null 2>&1 || true
+sleep 1
+xfconf-query -c xsettings -p /Net/ThemeName -n -t string -s "$gtk" >/dev/null 2>&1 || true
+if command -v xfconf-query >/dev/null 2>&1; then
+  xfconf-query -c xfce4-desktop -lv 2>/dev/null | awk '$1 ~ /last-image$/ {print $1}' | while IFS= read -r key; do
+    xfconf-query -c xfce4-desktop -p "$key" -s "$wallpaper" >/dev/null 2>&1 || true
+  done
+fi
+xfdesktop --reload >/dev/null 2>&1 || true

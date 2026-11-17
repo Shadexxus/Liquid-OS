@@ -1,0 +1,23 @@
+# XFCE X11: stable first release; no custom compositor promised yet
+xfce4
+xfce4-terminal
+xfce4-whiskermenu-plugin
+xfce4-notifyd
+xfce4-power-manager
+lightdm
+lightdm-gtk-greeter
+thunar
+thunar-volman
+mousepad
+ristretto
+file-roller
+firefox-esr
+fonts-dejavu-core
+fonts-noto-core
+adwaita-icon-theme
+arc-theme
+zenity
+
+# Alpha local control-center and process monitor
+python3-tk
+xfce4-taskmanager

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Liquid Kontrol Merkezi
+Comment=Liquid OS Control Center Alpha
+Exec=liquid-control-center
+Icon=preferences-system
+Terminal=false
+Categories=Settings;DesktopSettings;

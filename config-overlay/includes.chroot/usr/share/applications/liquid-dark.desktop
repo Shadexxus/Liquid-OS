@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Liquid Dark
+Name[tr]=Liquid Koyu Tema
+Comment=Activate dark wallpaper and XFCE theme
+Exec=/usr/local/bin/liquid-apply-theme dark
+Icon=preferences-desktop-theme
+Type=Application
+Categories=Settings;DesktopSettings;
+Terminal=false
