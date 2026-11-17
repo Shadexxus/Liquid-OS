@@ -1,0 +1,61 @@
+name: Build Liquid Universal OS ISO
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  iso:
+    name: Debian 13 Live ISO
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Validate source code
+        run: |
+          bash scripts/verify-project.sh
+
+      # GitHub Actions job-level container lacks privileges for live-build mount.
+      # Run an explicit privileged Debian 13 Docker build on the Ubuntu VM.
+      - name: Build ISO inside privileged Debian 13 container
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo docker run --rm --privileged \
+            --mount type=bind,src="$GITHUB_WORKSPACE",dst=/project \
+            --workdir /project \
+            debian:trixie bash -euxc '
+              apt-get update
+              DEBIAN_FRONTEND=noninteractive apt-get install -y \
+                live-build debootstrap squashfs-tools xorriso \
+                isolinux syslinux-common syslinux-utils \
+                dosfstools mtools ca-certificates python3 file
+              bash scripts/verify-project.sh
+              bash scripts/build-iso.sh
+              bash scripts/check-iso.sh dist/Liquid-Universal-OS-Alpha-0.1-amd64.iso
+            '
+
+      - name: Verify build artifact on host
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s dist/Liquid-Universal-OS-Alpha-0.1-amd64.iso
+          sha256sum -c dist/SHA256SUMS
+          ls -lh dist/
+
+      - name: Upload ISO and build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Liquid-Universal-OS-Alpha-0.1
+          path: |
+            dist/*.iso
+            dist/SHA256SUMS
+            dist/build.log
+          if-no-files-found: warn
+          retention-days: 7
+          compression-level: 0
