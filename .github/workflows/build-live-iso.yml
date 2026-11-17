@@ -1,4 +1,5 @@
-name: Build Liquid Universal OS ISO
+
+name: Liquid Universal OS ISO Builder
 
 on:
   workflow_dispatch:
@@ -7,47 +8,103 @@ permissions:
   contents: read
 
 jobs:
-  iso:
+  build:
     name: Debian 13 Live ISO
     runs-on: ubuntu-24.04
     timeout-minutes: 240
+
     steps:
-      - name: Check out source
+      - name: Download source
         uses: actions/checkout@v4
 
-      - name: Validate source code
+      - name: Fix script permissions
+        shell: bash
         run: |
+          set -euo pipefail
+
+          chmod +x scripts/*.sh
+
+          echo "Script permissions fixed"
+
+          ls -l scripts/
+
+      - name: Validate source code
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          bash scripts/check-source.sh
           bash scripts/verify-project.sh
 
-      # GitHub Actions job-level container lacks privileges for live-build mount.
-      # Run an explicit privileged Debian 13 Docker build on the Ubuntu VM.
-      - name: Build ISO inside privileged Debian 13 container
+          echo "Source validation passed"
+
+      - name: Build Debian 13 Live ISO
         shell: bash
         run: |
           set -euo pipefail
-          sudo docker run --rm --privileged \
+
+          mkdir -p dist
+
+          sudo docker run \
+            --rm \
+            --privileged \
             --mount type=bind,src="$GITHUB_WORKSPACE",dst=/project \
             --workdir /project \
-            debian:trixie bash -euxc '
+            debian:trixie \
+            bash -euc '
+              export DEBIAN_FRONTEND=noninteractive
+
               apt-get update
-              DEBIAN_FRONTEND=noninteractive apt-get install -y \
-                live-build debootstrap squashfs-tools xorriso \
-                isolinux syslinux-common syslinux-utils \
-                dosfstools mtools ca-certificates python3 file
+
+              apt-get install -y \
+                live-build \
+                debootstrap \
+                squashfs-tools \
+                xorriso \
+                isolinux \
+                syslinux-common \
+                syslinux-utils \
+                dosfstools \
+                mtools \
+                ca-certificates \
+                python3 \
+                file \
+                curl \
+                wget
+
+              chmod +x scripts/*.sh
+
+              bash scripts/check-source.sh
+
               bash scripts/verify-project.sh
+
               bash scripts/build-iso.sh
-              bash scripts/check-iso.sh dist/Liquid-Universal-OS-Alpha-0.1-amd64.iso
+
+              bash scripts/check-iso.sh \
+                dist/Liquid-Universal-OS-Alpha-0.1-amd64.iso
             '
 
-      - name: Verify build artifact on host
+      - name: Verify generated ISO
         shell: bash
         run: |
           set -euo pipefail
-          test -s dist/Liquid-Universal-OS-Alpha-0.1-amd64.iso
-          sha256sum -c dist/SHA256SUMS
-          ls -lh dist/
 
-      - name: Upload ISO and build log
+          ISO="dist/Liquid-Universal-OS-Alpha-0.1-amd64.iso"
+
+          if [ ! -s "$ISO" ]; then
+            echo "ERROR: ISO missing"
+            exit 1
+          fi
+
+          cd dist
+
+          sha256sum -c SHA256SUMS
+
+          ls -lh
+
+          echo "ISO verification passed"
+
+      - name: Upload ISO and build logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
