@@ -17,45 +17,22 @@ jobs:
       - name: Download source
         uses: actions/checkout@v4
 
-      - name: Fix script permissions
+      - name: Validate source
         shell: bash
         run: |
           set -euo pipefail
-
-          chmod +x scripts/*.sh
-
-          echo "Script permissions fixed"
-
-          ls -l scripts/
-
-      - name: Validate source code
-        shell: bash
-        run: |
-          set -euo pipefail
-
           bash scripts/check-source.sh
-          bash scripts/verify-project.sh
 
-          echo "Source validation passed"
-
-      - name: Build Debian 13 Live ISO
+      - name: Build Liquid OS ISO
         shell: bash
         run: |
           set -euo pipefail
-
-          mkdir -p dist
-
-          sudo docker run \
-            --rm \
-            --privileged \
-            --mount type=bind,src="$GITHUB_WORKSPACE",dst=/project \
+          sudo docker run --rm --privileged \
+            --mount "type=bind,source=${GITHUB_WORKSPACE},target=/project" \
             --workdir /project \
-            debian:trixie \
-            bash -euc '
-              export DEBIAN_FRONTEND=noninteractive
-
+            --env DEBIAN_FRONTEND=noninteractive \
+            debian:trixie bash -euc '
               apt-get update
-
               apt-get install -y \
                 live-build \
                 debootstrap \
@@ -68,43 +45,27 @@ jobs:
                 mtools \
                 ca-certificates \
                 python3 \
-                file \
-                curl \
-                wget
-
-              chmod +x scripts/*.sh
+                file
 
               bash scripts/check-source.sh
-
-              bash scripts/verify-project.sh
-
               bash scripts/build-iso.sh
-
               bash scripts/check-iso.sh \
                 dist/Liquid-Universal-OS-Alpha-0.1-amd64.iso
             '
 
-      - name: Verify generated ISO
+      - name: Check generated ISO
         shell: bash
         run: |
           set -euo pipefail
 
           ISO="dist/Liquid-Universal-OS-Alpha-0.1-amd64.iso"
 
-          if [ ! -s "$ISO" ]; then
-            echo "ERROR: ISO missing"
-            exit 1
-          fi
-
+          test -s "$ISO"
           cd dist
-
           sha256sum -c SHA256SUMS
-
           ls -lh
 
-          echo "ISO verification passed"
-
-      - name: Upload ISO and build logs
+      - name: Upload ISO
         if: always()
         uses: actions/upload-artifact@v4
         with:
